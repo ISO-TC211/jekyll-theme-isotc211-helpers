@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.authors       = ['Ribose Inc.']
   s.email         = ['open.source@ribose.com']
 
-  s.summary       = 'Helpers for the ISO TC 211 Jekyll theme'
+  s.summary       = 'Helpers for the ISO/TC 211 Jekyll theme'
   s.homepage      = 'https://github.com/riboseinc/jekyll-theme-isotc211-helpers/'
   s.license       = 'MIT'
 
