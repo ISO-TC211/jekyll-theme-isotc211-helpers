@@ -2,6 +2,15 @@ require 'pathname'
 
 module Jekyll
 
+  class ResourceReader < Generator
+    safe true
+    priority :high
+
+    def generate(site)
+      site.generate_resource_pages
+    end
+  end
+
   class ResourceListingPage < Page
     def initialize(site, base_dir, url, layout, header, resources)
       @site = site
@@ -20,7 +29,7 @@ module Jekyll
   end
 
   class ResourcePage < Page
-    def initialize(site, base_dir, index_url, index_label, layout, id, label, meta, contents)
+    def initialize(site, base_dir, index_url, index_label, layout, id, label, contents_tree)
       @site = site
       @base = base_dir
       @dir = File.join(index_url, id)
@@ -33,8 +42,7 @@ module Jekyll
         'title' => "#{label.capitalize} #{id}",
         'parent_title' => index_label,
         'parent_link' => "/#{index_url}",
-        'meta' => { "id" => id },
-        'contents' => contents,
+        'contents' => contents_tree,
       }
     end
   end
@@ -53,7 +61,7 @@ module Jekyll
         resources)
     end
 
-    def write_resource_page(listing_id, resource_id, contents)
+    def write_resource_page(listing_id, resource_id, contents_tree)
       cfg = self.config['resource_listings'][listing_id]
 
       self.pages << ResourcePage.new(
@@ -64,8 +72,7 @@ module Jekyll
         cfg['resource_layout'],
         resource_id,
         cfg['resource_label'],
-        {},
-        contents)
+        contents_tree)
     end
 
     def read_resource_contents(dir, id, listing_id)
@@ -73,7 +80,7 @@ module Jekyll
       return directory_hash(dir, "#{cfg['resource_label'].capitalize} #{id}")
     end
 
-    def read_resources
+    def generate_resource_pages
       if self.config.key?('resource_listings')
 
         self.config['resource_listings'].each do |listing_id, cfg|
@@ -85,8 +92,9 @@ module Jekyll
               # Ignore dot-directories
               next
             end
+
             id = basename
-            resources[id] = {}
+            resources[id] = {}  # Empty hash can in future be resource metadata
             contents = self.read_resource_contents(resource_dir.to_s, id, listing_id)
             self.write_resource_page(listing_id, id, contents)
           end
@@ -99,26 +107,18 @@ module Jekyll
 
   end
 
-  class ResourceReader < Generator
-    safe true
-    priority :high
-
-    def generate(site)
-      site.read_resources
-    end
-  end
-
 end
 
 
 def directory_hash(path, name=nil, level=0)
   data = {
-    "data" => (name || path),
-    "full_path" => path,
-    "level" => level,
+    'data' => (name || path),
+    'full_path' => path,
+    'level' => level,
   }
-  data["children"] = children = []
+  data['children'] = children = []
 
+  # Increment nesting indicator
   level += 1
 
   Dir.foreach(path) do |entry|
@@ -129,7 +129,11 @@ def directory_hash(path, name=nil, level=0)
     if File.directory?(full_path)
       children << directory_hash(full_path, entry, level=level)
     else
-      children << { "data" => entry, "full_path" => full_path, "level" => level }
+      children << {
+        'data' => entry,
+        'full_path' => full_path,
+        'level' => level,
+      }
     end
   end
 
