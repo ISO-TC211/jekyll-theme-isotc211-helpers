@@ -1,4 +1,5 @@
 require 'jekyll-theme-isotc211-helpers/resource_listing'
+require 'jekyll-theme-isotc211-helpers/resource_copy'
 
 
 module Jekyll
