@@ -75,6 +75,7 @@ module Jekyll
         contents_tree)
     end
 
+    # Returns a data structure representing a tree of resource subdirectories & files
     def read_resource_contents(dir, id, listing_id)
       cfg = self.config['resource_listings'][listing_id]
       return directory_hash(dir, "#{cfg['resource_label'].capitalize} #{id}")
