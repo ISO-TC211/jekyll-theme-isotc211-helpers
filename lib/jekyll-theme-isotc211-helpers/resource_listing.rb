@@ -20,6 +20,8 @@ module Jekyll
 
       self.process(@name)
 
+      puts resources
+
       self.data = {
         'layout' => layout || 'resource-index',
         'title' => header,
@@ -78,32 +80,33 @@ module Jekyll
     # Returns a data structure representing a tree of resource subdirectories & files
     def read_resource_contents(dir, id, listing_id)
       cfg = self.config['resource_listings'][listing_id]
-      return directory_hash(dir, "#{cfg['resource_label'].capitalize} #{id}")
+      directory_hash(dir, "#{cfg['resource_label'].capitalize} #{id}")
     end
 
     def generate_resource_pages
-      if self.config.key?('resource_listings')
+      return unless self.config.key?('resource_listings')
 
-        self.config['resource_listings'].each do |listing_id, cfg|
-          resources = {}
+      self.config['resource_listings'].each do |listing_id, cfg|
+        resources = {}
 
-          Pathname(cfg['resource_root']).children.each do |resource_dir|
-            basename = File.basename(resource_dir)
-            if basename[0] == '.'
-              # Ignore dot-directories
-              next
-            end
+        Pathname(cfg['resource_root']).children.sort.each do |resource_dir|
 
-            id = basename
-            resources[id] = {}  # Empty hash can in future be resource metadata
-            contents = self.read_resource_contents(resource_dir.to_s, id, listing_id)
-            self.write_resource_page(listing_id, id, contents)
-          end
+          # Ignore non-directories
+          next unless File.directory?(resource_dir)
+          basename = File.basename(resource_dir)
 
-          self.write_resource_listing_page(listing_id, resources)
+          # Ignore dot-directories
+          next if basename[0] == '.'
+
+          id = basename
+          resources[id] = {}  # Empty hash can in future be resource metadata
+          contents = self.read_resource_contents(resource_dir.to_s, id, listing_id)
+          self.write_resource_page(listing_id, id, contents)
         end
 
+        self.write_resource_listing_page(listing_id, resources)
       end
+
     end
 
   end
