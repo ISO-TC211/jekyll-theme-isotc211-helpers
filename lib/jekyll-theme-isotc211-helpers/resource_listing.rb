@@ -20,8 +20,6 @@ module Jekyll
 
       self.process(@name)
 
-      puts resources
-
       self.data = {
         'layout' => layout || 'resource-index',
         'title' => header,
